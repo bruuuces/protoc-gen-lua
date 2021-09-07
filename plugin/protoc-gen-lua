@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding:utf8 -*-
 # protoc-gen-erl
 # Google's Protocol Buffers project, ported to lua.
@@ -12,16 +12,16 @@
 
 import sys
 import os.path as path
-from cStringIO import StringIO
+from io import StringIO
 
-import plugin_pb2
+import google.protobuf.compiler.plugin_pb2 as plugin_pb2
 import google.protobuf.descriptor_pb2 as descriptor_pb2
 
 _packages = {}
 _files = {}
 _message = {}
 
-FDP = plugin_pb2.descriptor_pb2.FieldDescriptorProto
+FDP = descriptor_pb2.FieldDescriptorProto
 
 if sys.platform == "win32":
     import msvcrt, os
@@ -415,20 +415,24 @@ def code_gen_file(proto_file, env, is_gen):
         lua("module('%s_pb')\n" % env.filename)
 
         lua('\n\n')
-        map(lua, env.descriptor)
+        for item in env.descriptor:
+            lua(item)
         lua('\n')
-        map(lua, env.context)
+        for item in env.context:
+            lua(item)
         lua('\n')
         env.message.sort()
-        map(lua, env.message)
+        for item in env.message:
+            lua(item)
         lua('\n')
-        map(lua, env.register)
+        for item in env.register:
+            lua(item)
 
         _files[env.filename+ '_pb.lua'] = lua.getvalue()
     env.exit_file()
 
 def main():
-    plugin_require_bin = sys.stdin.read()
+    plugin_require_bin = sys.stdin.buffer.read()
     code_gen_req = plugin_pb2.CodeGeneratorRequest()
     code_gen_req.ParseFromString(plugin_require_bin)
 
@@ -443,7 +447,7 @@ def main():
         file_desc.name = k
         file_desc.content = _files[k]
 
-    sys.stdout.write(code_generated.SerializeToString())
+    sys.stdout.buffer.write(code_generated.SerializeToString())
 
 if __name__ == "__main__":
     main()
